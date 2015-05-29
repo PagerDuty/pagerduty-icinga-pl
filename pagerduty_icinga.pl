@@ -211,7 +211,7 @@ sub lock_and_flush_queue {
     die $!;
   }
 
-  unless (flock($lock_fd, LOCK_EX)) {
+  unless (flock($lock_fd, LOCK_EX|LOCK_NB)) {
     syslog(LOG_ERR, "flock %s failed: %s", $lock_filename, $!);
     die $!;
   }
