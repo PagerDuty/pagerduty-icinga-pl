@@ -81,6 +81,10 @@ pagerduty_icinga flush [options]
     times as necessary to pass multiple key-value pairs.  This option is only
     useful when an event is being enqueued.
 
+  --blacklist-field VALUE
+    Remove a specified field from the Pager Duty event. This option is useful if any of
+    the macros contain sensitive data.
+
   --help
     Display documentation for the script.
 
@@ -102,6 +106,7 @@ pagerduty_icinga flush [options]
 
 my $opt_api_base = "https://events.pagerduty.com/nagios/2010-04-15";
 my %opt_fields;
+my @opt_blacklist_fields;
 my $opt_help;
 my $opt_queue_dir = "/tmp/pagerduty_icinga";
 my $opt_verbose;
@@ -233,9 +238,13 @@ sub enqueue_event {
     $event{$1} = $v;
   }
 
+  # Remove any fields defined in the blacklist.
+  foreach $field (@opt_blacklist_fields) {
+    delete($event{$field});
+  }
+
   # Apply any other variables that were passed in.
   %event = (%event, %opt_fields);
-
   $event{"pd_version"} = "1.0";
 
   # Right off the bat, enqueue the event.  Nothing tiem consuming should come
@@ -264,6 +273,7 @@ sub enqueue_event {
 
 GetOptions("api-base=s" => \$opt_api_base,
        "field=s%" => \%opt_fields,
+       "blacklist-field=s" => \@opt_blacklist_fields,
        "help" => \$opt_help,
        "queue-dir=s" => \$opt_queue_dir,
        "verbose" => \$opt_verbose,
